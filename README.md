@@ -92,8 +92,6 @@ npm run db:seed    # create demo business + user
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) — login with `lafresona@negocio.com` / `lafresona123`.
-
 > **Demo online:** [cuentasclara.vercel.app](https://cuentasclara.vercel.app)
 >
 > | Email | Contraseña | Negocio |

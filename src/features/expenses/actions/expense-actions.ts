@@ -7,20 +7,40 @@ import { eq, desc, and, gte, lte, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { expenseSchema } from "../schemas/expense-schema";
 
+const DEFAULT_CATEGORIES = [
+  { name: "Ingredientes", color: "#ef4444" },
+  { name: "Insumos", color: "#f59e0b" },
+  { name: "Transporte", color: "#3b82f6" },
+  { name: "Otros", color: "#6b7280" },
+];
+
 export async function getExpenseCategories() {
   const session = await auth();
   const businessId = session?.user?.businessId;
 
-  if (businessId) {
-    const { or, isNull: isNullFn } = await import("drizzle-orm");
+  if (!businessId) {
+    return db.select().from(expenseCategories).orderBy(expenseCategories.name);
+  }
+
+  const existing = await db
+    .select()
+    .from(expenseCategories)
+    .where(eq(expenseCategories.businessId, businessId))
+    .orderBy(expenseCategories.name);
+
+  // Auto-crear categorías por defecto si el negocio no tiene ninguna
+  if (existing.length === 0) {
+    await db.insert(expenseCategories).values(
+      DEFAULT_CATEGORIES.map((c) => ({ ...c, businessId }))
+    );
     return db
       .select()
       .from(expenseCategories)
-      .where(or(eq(expenseCategories.businessId, businessId), isNullFn(expenseCategories.businessId)))
+      .where(eq(expenseCategories.businessId, businessId))
       .orderBy(expenseCategories.name);
   }
 
-  return db.select().from(expenseCategories).orderBy(expenseCategories.name);
+  return existing;
 }
 
 export async function createExpense(data: {

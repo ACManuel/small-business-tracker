@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db";
-import { businesses, users } from "@/db/schema";
+import { businesses, users, expenseCategories } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import { hash } from "bcryptjs";
@@ -137,5 +137,63 @@ export async function deleteBusinessUser(targetId: string) {
 
   await db.delete(users).where(eq(users.id, targetId));
   revalidatePath("/configuracion");
+  return { success: true };
+}
+
+// ── Categorías de gastos ──────────────────────────────────────────────────────
+
+export async function getSettingsCategories() {
+  const businessId = await getBusinessId();
+  if (!businessId) return [];
+
+  return db
+    .select()
+    .from(expenseCategories)
+    .where(eq(expenseCategories.businessId, businessId))
+    .orderBy(expenseCategories.name);
+}
+
+export async function createExpenseCategory(data: {
+  name: string;
+  color: string;
+}) {
+  const businessId = await getBusinessId();
+  if (!businessId) return { error: "No autorizado" };
+
+  const schema = z.object({
+    name: z.string().min(1, "El nombre es requerido").max(40),
+    color: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Color inválido"),
+  });
+
+  const parsed = schema.safeParse(data);
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+
+  await db.insert(expenseCategories).values({
+    name: parsed.data.name,
+    color: parsed.data.color,
+    businessId,
+  });
+
+  revalidatePath("/configuracion");
+  revalidatePath("/gastos");
+  return { success: true };
+}
+
+export async function deleteExpenseCategory(categoryId: string) {
+  const businessId = await getBusinessId();
+  if (!businessId) return { error: "No autorizado" };
+
+  const [cat] = await db
+    .select({ businessId: expenseCategories.businessId })
+    .from(expenseCategories)
+    .where(eq(expenseCategories.id, categoryId))
+    .limit(1);
+
+  if (!cat || cat.businessId !== businessId)
+    return { error: "Categoría no encontrada" };
+
+  await db.delete(expenseCategories).where(eq(expenseCategories.id, categoryId));
+  revalidatePath("/configuracion");
+  revalidatePath("/gastos");
   return { success: true };
 }

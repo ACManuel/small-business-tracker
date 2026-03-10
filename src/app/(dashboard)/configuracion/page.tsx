@@ -2,9 +2,11 @@ import { auth } from "@/lib/auth";
 import {
   getBusinessSettings,
   getBusinessUsers,
+  getSettingsCategories,
 } from "@/features/settings/actions/settings-actions";
 import { BusinessSettingsForm } from "@/features/settings/components/business-settings-form";
 import { UsersManager } from "@/features/settings/components/users-manager";
+import { CategoriesManager } from "@/features/settings/components/categories-manager";
 import { PwaInstallButton } from "@/components/pwa-install-button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -17,9 +19,10 @@ import {
 
 export default async function ConfiguracionPage() {
   const session = await auth();
-  const [business, users] = await Promise.all([
+  const [business, users, categories] = await Promise.all([
     getBusinessSettings(),
     getBusinessUsers(),
+    getSettingsCategories(),
   ]);
 
   return (
@@ -36,6 +39,9 @@ export default async function ConfiguracionPage() {
           <TabsTrigger value="negocio" className="flex-1">
             Negocio
           </TabsTrigger>
+          <TabsTrigger value="categorias" className="flex-1">
+            Categorías
+          </TabsTrigger>
           <TabsTrigger value="usuarios" className="flex-1">
             Usuarios
           </TabsTrigger>
@@ -51,6 +57,20 @@ export default async function ConfiguracionPage() {
             </CardHeader>
             <CardContent>
               <BusinessSettingsForm business={business} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="categorias" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Categorías de gastos</CardTitle>
+              <CardDescription>
+                Organiza tus gastos por categoría
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <CategoriesManager categories={categories} />
             </CardContent>
           </Card>
         </TabsContent>

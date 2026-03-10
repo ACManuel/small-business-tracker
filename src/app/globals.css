@@ -120,10 +120,10 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html, body {
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  }
   body {
     @apply bg-background text-foreground;
-  }
-  html {
-    @apply font-sans;
   }
 }

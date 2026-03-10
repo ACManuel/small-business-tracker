@@ -32,7 +32,7 @@ A full-stack web application for small businesses to track daily sales and expen
 | Validation | Zod v4 |
 | Charts | Recharts |
 | Forms | React Hook Form |
-| Font | Poppins (Google Fonts) |
+| Font | Inter (Google Fonts) |
 
 ---
 
@@ -92,7 +92,9 @@ npm run db:seed    # create demo business + user
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) — login with `admin@negocio.com` / `admin123`.
+Open [http://localhost:3000](http://localhost:3000) — login with `lafresona@negocio.com` / `lafresona123`.
+
+> **Demo online:** [cuentasclara.vercel.app](https://cuentasclara.vercel.app) — cuenta de prueba: `pruebas@negocio.com` / `pruebas123`
 
 ---
 
@@ -144,7 +146,3 @@ npm run db:seed    # Seed demo data
 **Manuel Enrique Antón Cisneros** — Systems Engineer, Peru.
 
 [LinkedIn](https://www.linkedin.com/in/manuel-eac/) · [GitHub](https://github.com/ACManuel)
-
-
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

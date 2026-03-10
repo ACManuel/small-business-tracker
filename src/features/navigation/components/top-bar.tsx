@@ -40,7 +40,7 @@ export function TopBar({
               </Button>
             }
           />
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="min-w-[180px]">
             <DropdownMenuItem disabled className="text-xs text-muted-foreground">
               {userName}
             </DropdownMenuItem>

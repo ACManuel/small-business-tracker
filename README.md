@@ -94,7 +94,11 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) — login with `lafresona@negocio.com` / `lafresona123`.
 
-> **Demo online:** [cuentasclara.vercel.app](https://cuentasclara.vercel.app) — cuenta de prueba: `pruebas@negocio.com` / `pruebas123`
+> **Demo online:** [cuentasclara.vercel.app](https://cuentasclara.vercel.app)
+>
+> | Email | Contraseña | Negocio |
+> |---|---|---|
+> | `demo@negocio.com` | `demo1234` | Cafetería Demo |
 
 ---
 

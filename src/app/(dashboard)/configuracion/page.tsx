@@ -5,6 +5,7 @@ import {
 } from "@/features/settings/actions/settings-actions";
 import { BusinessSettingsForm } from "@/features/settings/components/business-settings-form";
 import { UsersManager } from "@/features/settings/components/users-manager";
+import { PwaInstallButton } from "@/components/pwa-install-button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
@@ -71,6 +72,18 @@ export default async function ConfiguracionPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Instalar aplicación</CardTitle>
+          <CardDescription>
+            Agrega la app a la pantalla de inicio de tu celular
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <PwaInstallButton />
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -94,6 +94,7 @@ export async function createBusinessUser(data: {
   name: string;
   email: string;
   password: string;
+  role: "owner" | "member";
 }) {
   const session = await requireOwner();
   if (!session) return { error: "No autorizado" };
@@ -103,6 +104,7 @@ export async function createBusinessUser(data: {
     name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
     email: z.string().email("Email inválido"),
     password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
+    role: z.enum(["owner", "member"]),
   });
 
   const parsed = schema.safeParse(data);
@@ -123,7 +125,7 @@ export async function createBusinessUser(data: {
     email: parsed.data.email,
     passwordHash,
     businessId,
-    role: "member",
+    role: parsed.data.role,
   });
 
   revalidatePath("/configuracion");

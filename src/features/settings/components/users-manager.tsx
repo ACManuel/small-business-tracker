@@ -28,12 +28,13 @@ export function UsersManager({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState<"owner" | "member">("member");
   const [loading, setLoading] = useState(false);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    const result = await createBusinessUser({ name, email, password });
+    const result = await createBusinessUser({ name, email, password, role });
     setLoading(false);
     if (result?.error) {
       toast.error(result.error);
@@ -42,6 +43,7 @@ export function UsersManager({
       setName("");
       setEmail("");
       setPassword("");
+      setRole("member");
       setShowForm(false);
     }
   }
@@ -145,6 +147,35 @@ export function UsersManager({
                 required
                 minLength={6}
               />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Rol</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setRole("member")}
+                  className={`h-11 rounded-lg border text-sm font-medium transition-colors ${
+                    role === "member"
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-background text-foreground border-border hover:bg-muted"
+                  }`}
+                >
+                  Miembro
+                  <span className="block text-xs font-normal opacity-70">Solo ventas</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRole("owner")}
+                  className={`h-11 rounded-lg border text-sm font-medium transition-colors ${
+                    role === "owner"
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-background text-foreground border-border hover:bg-muted"
+                  }`}
+                >
+                  Dueño
+                  <span className="block text-xs font-normal opacity-70">Acceso completo</span>
+                </button>
+              </div>
             </div>
             <div className="flex gap-2 pt-1">
               <Button

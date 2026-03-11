@@ -8,6 +8,27 @@ import { authConfig } from "./auth.config";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
+  callbacks: {
+    ...authConfig.callbacks,
+    async jwt({ token, user }) {
+      // En login, guardar datos del usuario
+      if (user) {
+        token.id = user.id as string;
+        token.businessId = user.businessId;
+        token.role = user.role;
+      }
+      // Si el token existente no tiene role, recuperarlo de la DB
+      if (!token.role && token.id) {
+        const [dbUser] = await db
+          .select({ role: users.role })
+          .from(users)
+          .where(eq(users.id, token.id as string))
+          .limit(1);
+        if (dbUser) token.role = dbUser.role as "owner" | "member";
+      }
+      return token;
+    },
+  },
   providers: [
     Credentials({
       name: "credentials",

@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import {
   getBusinessSettings,
   getBusinessUsers,
@@ -19,6 +20,8 @@ import {
 
 export default async function ConfiguracionPage() {
   const session = await auth();
+  if (session?.user?.role !== "owner") redirect("/dashboard");
+
   const [business, users, categories] = await Promise.all([
     getBusinessSettings(),
     getBusinessUsers(),

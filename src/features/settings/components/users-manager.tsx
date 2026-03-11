@@ -72,7 +72,7 @@ export function UsersManager({
               <Badge variant={user.role === "owner" ? "default" : "secondary"}>
                 {user.role === "owner" ? "Dueño" : "Miembro"}
               </Badge>
-              {user.id !== currentUserId && (
+              {user.id !== currentUserId && user.role !== "owner" && (
                 <Button
                   variant="ghost"
                   size="icon"

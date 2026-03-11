@@ -8,9 +8,21 @@ import { hash } from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+async function getSession() {
+  const session = await auth();
+  return session ?? null;
+}
+
 async function getBusinessId() {
   const session = await auth();
   return session?.user?.businessId ?? null;
+}
+
+async function requireOwner() {
+  const session = await auth();
+  if (!session?.user?.businessId) return null;
+  if (session.user.role !== "owner") return null;
+  return session;
 }
 
 export async function getBusinessSettings() {
@@ -83,8 +95,9 @@ export async function createBusinessUser(data: {
   email: string;
   password: string;
 }) {
-  const businessId = await getBusinessId();
-  if (!businessId) return { error: "No autorizado" };
+  const session = await requireOwner();
+  if (!session) return { error: "No autorizado" };
+  const businessId = session.user.businessId!;
 
   const schema = z.object({
     name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
@@ -118,22 +131,26 @@ export async function createBusinessUser(data: {
 }
 
 export async function deleteBusinessUser(targetId: string) {
-  const session = await auth();
-  const currentId = session?.user?.id;
-  const businessId = session?.user?.businessId;
+  const session = await requireOwner();
+  if (!session) return { error: "No autorizado" };
 
-  if (!businessId || !currentId) return { error: "No autorizado" };
+  const currentId = session.user.id;
+  const businessId = session.user.businessId!;
+
   if (currentId === targetId)
     return { error: "No puedes eliminarte a ti mismo" };
 
   const [target] = await db
-    .select({ businessId: users.businessId })
+    .select({ businessId: users.businessId, role: users.role })
     .from(users)
     .where(eq(users.id, targetId))
     .limit(1);
 
   if (!target || target.businessId !== businessId)
     return { error: "Usuario no encontrado" };
+
+  if (target.role === "owner")
+    return { error: "No se puede eliminar al dueño" };
 
   await db.delete(users).where(eq(users.id, targetId));
   revalidatePath("/configuracion");

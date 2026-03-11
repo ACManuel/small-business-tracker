@@ -11,16 +11,19 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const navItems = [
-  { href: "/dashboard", label: "Inicio", icon: LayoutDashboard },
-  { href: "/ventas", label: "Ventas", icon: ShoppingCart },
-  { href: "/gastos", label: "Gastos", icon: Receipt },
-  { href: "/productos", label: "Productos", icon: Package },
-  { href: "/reportes", label: "Reportes", icon: BarChart3 },
+const allNavItems = [
+  { href: "/dashboard", label: "Inicio", icon: LayoutDashboard, ownerOnly: false },
+  { href: "/ventas", label: "Ventas", icon: ShoppingCart, ownerOnly: false },
+  { href: "/gastos", label: "Gastos", icon: Receipt, ownerOnly: true },
+  { href: "/productos", label: "Productos", icon: Package, ownerOnly: true },
+  { href: "/reportes", label: "Reportes", icon: BarChart3, ownerOnly: true },
 ];
 
-export function BottomNav() {
+export function BottomNav({ role }: { role?: string | null }) {
   const pathname = usePathname();
+  const navItems = role === "member"
+    ? allNavItems.filter((item) => !item.ownerOnly)
+    : allNavItems;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border safe-area-bottom">

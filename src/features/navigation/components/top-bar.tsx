@@ -17,11 +17,13 @@ export function TopBar({
   businessName,
   businessLogoUrl,
   businessLogoBgColor,
+  role,
 }: {
   userName: string;
   businessName: string;
   businessLogoUrl?: string | null;
   businessLogoBgColor?: string | null;
+  role?: string | null;
 }) {
   const router = useRouter();
 
@@ -44,10 +46,12 @@ export function TopBar({
             <DropdownMenuItem disabled className="text-xs text-muted-foreground">
               {userName}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push("/configuracion")}>
-              <Settings className="mr-2 h-4 w-4" />
-              Configuración
-            </DropdownMenuItem>
+            {role !== "member" && (
+              <DropdownMenuItem onClick={() => router.push("/configuracion")}>
+                <Settings className="mr-2 h-4 w-4" />
+                Configuración
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem
               onClick={() => signOut({ callbackUrl: "/login" })}
               className="text-destructive focus:text-destructive"

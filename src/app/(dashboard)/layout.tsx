@@ -16,6 +16,7 @@ export default async function DashboardLayout({
   if (!session) redirect("/login");
 
   const businessId = session.user?.businessId;
+  const userRole = session.user?.role;
   let businessName = "Mi Negocio";
   let businessLogoUrl: string | null = null;
   let businessLogoBgColor = "#000000";
@@ -41,9 +42,10 @@ export default async function DashboardLayout({
         businessName={businessName}
         businessLogoUrl={businessLogoUrl}
         businessLogoBgColor={businessLogoBgColor}
+        role={userRole}
       />
       <main className="max-w-lg mx-auto px-4 py-4">{children}</main>
-      <BottomNav />
+      <BottomNav role={userRole} />
     </div>
   );
 }

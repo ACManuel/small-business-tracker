@@ -14,6 +14,7 @@ export const authConfig = {
       if (user) {
         token.id = user.id as string;
         token.businessId = user.businessId;
+        token.role = user.role;
       }
       return token;
     },
@@ -21,6 +22,7 @@ export const authConfig = {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.businessId = token.businessId;
+        session.user.role = token.role;
       }
       return session;
     },
@@ -33,7 +35,18 @@ export const authConfig = {
         return true;
       }
 
-      return isLoggedIn;
+      if (!isLoggedIn) return false;
+
+      const role = auth?.user?.role;
+      if (role === "member") {
+        const memberAllowed = ["/dashboard", "/ventas"];
+        const isAllowed = memberAllowed.some(
+          (p) => nextUrl.pathname === p || nextUrl.pathname.startsWith(p + "/")
+        );
+        if (!isAllowed) return Response.redirect(new URL("/dashboard", nextUrl));
+      }
+
+      return true;
     },
   },
   providers: [], // providers added in auth.ts

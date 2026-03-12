@@ -61,12 +61,16 @@ export function ExpenseForm({ categories }: { categories: Category[] }) {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="description">¿En qué se gastó?</Label>
-        <Input
+        <textarea
           id="description"
-          placeholder="Ej: Harina 5kg, Fresas 2kg"
-          className="h-12"
+          placeholder="Ej: Leche 6L, Harina 5kg, Transporte, Fresas 2kg"
+          className="min-h-24 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+          maxLength={500}
           {...register("description")}
         />
+        <p className="text-xs text-muted-foreground">
+          Puedes escribir varios conceptos en un solo gasto (máximo 500 caracteres).
+        </p>
         {errors.description && (
           <p className="text-xs text-destructive">
             {errors.description.message}

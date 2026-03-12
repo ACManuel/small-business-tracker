@@ -36,21 +36,19 @@ export function SaleList({ sales }: { sales: Sale[] }) {
     <div className="space-y-2">
       {sales.map((sale) => (
         <Card key={sale.id}>
-          <CardContent className="flex items-center justify-between py-3">
+          <CardContent className="flex items-start justify-between py-3 gap-2">
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-sm text-green-600">
                 +{formatCurrency(sale.totalAmount)}
               </p>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-xs text-muted-foreground">
-                  {formatDate(sale.date)}
-                </span>
-                {(sale.itemsSummary || sale.notes) && (
-                  <span className="text-xs text-muted-foreground truncate">
-                    · {sale.itemsSummary ?? sale.notes}
-                  </span>
-                )}
-              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {formatDate(sale.date)}
+              </p>
+              {(sale.itemsSummary || sale.notes) && (
+                <p className="text-xs text-muted-foreground mt-1 wrap-break-word leading-relaxed">
+                  {sale.itemsSummary ?? sale.notes}
+                </p>
+              )}
             </div>
             <Button
               variant="ghost"

@@ -4,7 +4,7 @@ export const expenseSchema = z.object({
   description: z
     .string()
     .min(2, "La descripción debe tener al menos 2 caracteres")
-    .max(200, "La descripción es muy larga"),
+    .max(500, "La descripción es muy larga (máximo 500 caracteres)"),
   amount: z
     .number({ error: "El monto es obligatorio" })
     .positive("El monto debe ser mayor a 0")

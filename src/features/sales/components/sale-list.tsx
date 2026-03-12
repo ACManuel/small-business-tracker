@@ -12,6 +12,7 @@ type Sale = {
   date: string;
   totalAmount: number;
   notes: string | null;
+  itemsSummary?: string | null;
 };
 
 export function SaleList({ sales }: { sales: Sale[] }) {
@@ -44,9 +45,9 @@ export function SaleList({ sales }: { sales: Sale[] }) {
                 <span className="text-xs text-muted-foreground">
                   {formatDate(sale.date)}
                 </span>
-                {sale.notes && (
+                {(sale.itemsSummary || sale.notes) && (
                   <span className="text-xs text-muted-foreground truncate">
-                    · {sale.notes}
+                    · {sale.itemsSummary ?? sale.notes}
                   </span>
                 )}
               </div>

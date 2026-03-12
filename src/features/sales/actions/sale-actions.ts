@@ -1,9 +1,9 @@
 "use server";
 
 import { db } from "@/db";
-import { sales, saleItems, products } from "@/db/schema";
+import { sales, saleItems, products, users } from "@/db/schema";
 import { auth } from "@/lib/auth";
-import { desc, and, gte, lte, eq, sql } from "drizzle-orm";
+import { desc, and, gte, lte, eq, sql, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { saleSchema } from "../schemas/sale-schema";
 
@@ -59,16 +59,51 @@ export async function createSale(data: {
 }
 
 export async function getSales(dateFrom?: string, dateTo?: string) {
-  const conditions = [];
+  const session = await auth();
+  const businessId = session?.user?.businessId;
+  if (!businessId) return [];
+
+  const conditions = [eq(users.businessId, businessId)];
   if (dateFrom) conditions.push(gte(sales.date, dateFrom));
   if (dateTo) conditions.push(lte(sales.date, dateTo));
 
-  const query = db.select().from(sales);
+  const salesResult = await db
+    .select({
+      id: sales.id,
+      date: sales.date,
+      totalAmount: sales.totalAmount,
+      notes: sales.notes,
+      createdAt: sales.createdAt,
+    })
+    .from(sales)
+    .innerJoin(users, eq(sales.userId, users.id))
+    .where(and(...conditions))
+    .orderBy(desc(sales.date), desc(sales.createdAt));
 
-  if (conditions.length > 0) {
-    return query.where(and(...conditions)).orderBy(desc(sales.date));
+  if (salesResult.length === 0) return salesResult;
+
+  const saleIds = salesResult.map((sale) => sale.id);
+  const items = await db
+    .select({
+      saleId: saleItems.saleId,
+      quantity: saleItems.quantity,
+      productName: products.name,
+    })
+    .from(saleItems)
+    .innerJoin(products, eq(saleItems.productId, products.id))
+    .where(inArray(saleItems.saleId, saleIds));
+
+  const itemsBySale = new Map<string, string>();
+  for (const item of items) {
+    const label = `${item.productName} x${item.quantity}`;
+    const prev = itemsBySale.get(item.saleId);
+    itemsBySale.set(item.saleId, prev ? `${prev}, ${label}` : label);
   }
-  return query.orderBy(desc(sales.date));
+
+  return salesResult.map((sale) => ({
+    ...sale,
+    itemsSummary: itemsBySale.get(sale.id) ?? null,
+  }));
 }
 
 export async function getSaleWithItems(saleId: string) {

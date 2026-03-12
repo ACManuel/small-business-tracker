@@ -107,10 +107,22 @@ export async function getSales(dateFrom?: string, dateTo?: string) {
 }
 
 export async function getSaleWithItems(saleId: string) {
+  const session = await auth();
+  const businessId = session?.user?.businessId;
+  if (!businessId) return null;
+
   const [sale] = await db
-    .select()
+    .select({
+      id: sales.id,
+      userId: sales.userId,
+      date: sales.date,
+      totalAmount: sales.totalAmount,
+      notes: sales.notes,
+      createdAt: sales.createdAt,
+    })
     .from(sales)
-    .where(eq(sales.id, saleId))
+    .innerJoin(users, eq(sales.userId, users.id))
+    .where(and(eq(sales.id, saleId), eq(users.businessId, businessId)))
     .limit(1);
 
   if (!sale) return null;
@@ -134,17 +146,43 @@ export async function getSaleTotalByRange(
   dateFrom: string,
   dateTo: string
 ) {
+  const session = await auth();
+  const businessId = session?.user?.businessId;
+  if (!businessId) return 0;
+
   const [result] = await db
     .select({
       total: sql<number>`COALESCE(SUM(${sales.totalAmount}), 0)`,
     })
     .from(sales)
-    .where(and(gte(sales.date, dateFrom), lte(sales.date, dateTo)));
+    .innerJoin(users, eq(sales.userId, users.id))
+    .where(
+      and(
+        eq(users.businessId, businessId),
+        gte(sales.date, dateFrom),
+        lte(sales.date, dateTo)
+      )
+    );
 
   return result.total;
 }
 
 export async function deleteSale(id: string) {
+  const session = await auth();
+  const businessId = session?.user?.businessId;
+  if (!businessId) return { error: "No autorizado" };
+
+  const [target] = await db
+    .select({ businessId: users.businessId })
+    .from(sales)
+    .innerJoin(users, eq(sales.userId, users.id))
+    .where(eq(sales.id, id))
+    .limit(1);
+
+  if (!target || target.businessId !== businessId) {
+    return { error: "Venta no encontrada" };
+  }
+
   await db.delete(sales).where(eq(sales.id, id));
   revalidatePath("/ventas");
   revalidatePath("/dashboard");

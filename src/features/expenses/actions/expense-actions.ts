@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db";
-import { expenses, expenseCategories } from "@/db/schema";
+import { expenses, expenseCategories, users } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { eq, desc, and, gte, lte, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -19,7 +19,7 @@ export async function getExpenseCategories() {
   const businessId = session?.user?.businessId;
 
   if (!businessId) {
-    return db.select().from(expenseCategories).orderBy(expenseCategories.name);
+    return [];
   }
 
   const existing = await db
@@ -67,7 +67,11 @@ export async function createExpense(data: {
 }
 
 export async function getExpenses(dateFrom?: string, dateTo?: string) {
-  const conditions = [];
+  const session = await auth();
+  const businessId = session?.user?.businessId;
+  if (!businessId) return [];
+
+  const conditions = [eq(users.businessId, businessId)];
 
   if (dateFrom) conditions.push(gte(expenses.date, dateFrom));
   if (dateTo) conditions.push(lte(expenses.date, dateTo));
@@ -84,6 +88,7 @@ export async function getExpenses(dateFrom?: string, dateTo?: string) {
       createdAt: expenses.createdAt,
     })
     .from(expenses)
+    .innerJoin(users, eq(expenses.userId, users.id))
     .leftJoin(
       expenseCategories,
       eq(expenses.categoryId, expenseCategories.id)
@@ -100,15 +105,41 @@ export async function getExpenseTotalByRange(
   dateFrom: string,
   dateTo: string
 ) {
+  const session = await auth();
+  const businessId = session?.user?.businessId;
+  if (!businessId) return 0;
+
   const [result] = await db
     .select({ total: sql<number>`COALESCE(SUM(${expenses.amount}), 0)` })
     .from(expenses)
-    .where(and(gte(expenses.date, dateFrom), lte(expenses.date, dateTo)));
+    .innerJoin(users, eq(expenses.userId, users.id))
+    .where(
+      and(
+        eq(users.businessId, businessId),
+        gte(expenses.date, dateFrom),
+        lte(expenses.date, dateTo)
+      )
+    );
 
   return result.total;
 }
 
 export async function deleteExpense(id: string) {
+  const session = await auth();
+  const businessId = session?.user?.businessId;
+  if (!businessId) return { error: "No autorizado" };
+
+  const [target] = await db
+    .select({ businessId: users.businessId })
+    .from(expenses)
+    .innerJoin(users, eq(expenses.userId, users.id))
+    .where(eq(expenses.id, id))
+    .limit(1);
+
+  if (!target || target.businessId !== businessId) {
+    return { error: "Gasto no encontrado" };
+  }
+
   await db.delete(expenses).where(eq(expenses.id, id));
   revalidatePath("/gastos");
   revalidatePath("/dashboard");

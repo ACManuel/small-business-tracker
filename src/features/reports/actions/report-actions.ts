@@ -1,8 +1,9 @@
 "use server";
 
 import { db } from "@/db";
-import { sales, expenses, expenseCategories } from "@/db/schema";
+import { sales, expenses, expenseCategories, users } from "@/db/schema";
 import { and, gte, lte, sql, eq } from "drizzle-orm";
+import { auth } from "@/lib/auth";
 
 export type PeriodData = {
   date: string;
@@ -21,13 +22,24 @@ export async function getReportData(
   dateFrom: string,
   dateTo: string
 ): Promise<PeriodData[]> {
+  const session = await auth();
+  const businessId = session?.user?.businessId;
+  if (!businessId) return [];
+
   const salesByDay = await db
     .select({
       date: sales.date,
       total: sql<number>`SUM(${sales.totalAmount})`,
     })
     .from(sales)
-    .where(and(gte(sales.date, dateFrom), lte(sales.date, dateTo)))
+    .innerJoin(users, eq(sales.userId, users.id))
+    .where(
+      and(
+        eq(users.businessId, businessId),
+        gte(sales.date, dateFrom),
+        lte(sales.date, dateTo)
+      )
+    )
     .groupBy(sales.date);
 
   const expensesByDay = await db
@@ -36,7 +48,14 @@ export async function getReportData(
       total: sql<number>`SUM(${expenses.amount})`,
     })
     .from(expenses)
-    .where(and(gte(expenses.date, dateFrom), lte(expenses.date, dateTo)))
+    .innerJoin(users, eq(expenses.userId, users.id))
+    .where(
+      and(
+        eq(users.businessId, businessId),
+        gte(expenses.date, dateFrom),
+        lte(expenses.date, dateTo)
+      )
+    )
     .groupBy(expenses.date);
 
   const dates: string[] = [];
@@ -61,6 +80,10 @@ export async function getExpensesByCategory(
   dateFrom: string,
   dateTo: string
 ): Promise<CategoryBreakdown[]> {
+  const session = await auth();
+  const businessId = session?.user?.businessId;
+  if (!businessId) return [];
+
   const result = await db
     .select({
       name: expenseCategories.name,
@@ -72,7 +95,14 @@ export async function getExpensesByCategory(
       expenseCategories,
       eq(expenses.categoryId, expenseCategories.id)
     )
-    .where(and(gte(expenses.date, dateFrom), lte(expenses.date, dateTo)))
+    .innerJoin(users, eq(expenses.userId, users.id))
+    .where(
+      and(
+        eq(users.businessId, businessId),
+        gte(expenses.date, dateFrom),
+        lte(expenses.date, dateTo)
+      )
+    )
     .groupBy(expenseCategories.name, expenseCategories.color);
 
   return result;
